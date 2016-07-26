@@ -159,6 +159,6 @@ fname1=['resultserr1_smu1_' num2str(b) 'ratio.mat'];
 fname2=['resultserr2_smu1_' num2str(b) 'DET.mat'];
 save(fname1,'ratio');
 save(fname2,'DET');
-
+%%%%%%%%%
 end
 
