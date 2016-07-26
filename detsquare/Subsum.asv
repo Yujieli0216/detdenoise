@@ -1,0 +1,8 @@
+function[Subsum]=Subsum(A,S)
+l=size(S,1);
+for i=1:l
+    p=i;
+    q=i*l;
+    Subsum=Subsum+A(:,p:q)*S(:,i);
+end
+    

@@ -1,0 +1,235 @@
+function[Aest Sest Sst Xest Cost Err St ratio]=Update1(X,A0,S0,Aa)
+[a,b]=size(S0);
+M=sqrt(a);
+S=reshape(S0,M,M);
+%S=normcols(S);
+Sest=S;
+m=size(X,1);
+Subm=zeros(m,1);
+Stt=zeros(M,1);
+Sst=zeros(a,b);
+Cost=zeros(100,1);
+Err=zeros(100,1);
+St=zeros(10,1);
+ratio=zeros(100,1);
+esp=1e-3;
+na=5e+10;
+Ai=Aa;
+iter=1;
+beta=1;
+
+
+
+while iter<=100*M
+ tic
+    iter;
+   
+       SS=S'*beta*S;
+    A_P=adj_mat(SS);
+       i=mod(iter,M);
+    if i==0 i=M; end  
+    
+    coef11=zeros(M,M);
+    coef21=zeros(M,M);
+    coef31=zeros(M,M);
+     AS1=zeros(m,1);
+     AS2=zeros(m,1);
+    for j=1:M
+        temp1(:,:)=A_P(i,j,:,:);
+        A_P_temp1=adj_mat(temp1);
+        if j<i
+ 
+             p1=1+(j-1)*M;
+             q1=j*M;
+            AS1=AS1+Ai(:,p1:q1)*S(:,j);
+         
+            coef10=zeros(1,M);
+            for t=1:M-1
+                 temp2(:,:)=A_P_temp1(t,i-1,:,:);
+                 tt=t;
+                if t>=i 
+                    tt=t+1; 
+                end
+                 Stt=S(:,tt);
+                coef10=coef10+(-1)^(t+i-1)*det(temp2)*Stt'*beta;                
+            end
+            coef11=coef11+(-1)^(i+j)*beta*S(:,j)*coef10;
+        end
+        if j==i
+            coef21=eye(M)*det(temp1)*beta;
+        end
+        if j>i
+            
+             p2=1+(j-1)*M;
+             q2=j*M;
+             AS2=AS2+Ai(:,p2:q2)*S(:,j);
+            
+            coef30=zeros(1,M);
+            for t=1:M-1
+                 temp3(:,:)=A_P_temp1(t,i,:,:);
+                 tt=t;
+                if t>=i;
+                    tt=t+1;
+                end
+                Stt=S(:,tt);
+                coef30=coef30+(-1)^(t+i)*det(temp3)*Stt'*beta;                
+            end
+            coef31=coef31+(-1)^(i+j)*S(:,j)*coef30*beta;
+           
+        end
+         obj_coef=coef11+coef21+coef31;
+    end
+        
+        AS=AS1+AS2;
+        AS=AS./sum(AS);
+         p=1+(i-1)*M;
+         q=i*M;  
+   %Sest(:,i)=pinv(na*(obj_coef+obj_coef')-2*Ai(:,p:q)'*Ai(:,p:q))*(2*Ai(:,p:q)'*X-2*Ai(:,p:q)'*AS);
+   
+  
+    Xj=X-AS;
+    
+  
+    H=(obj_coef+obj_coef')/2;
+    Aeq=ones(1,M);
+    %Aeq=Ai(:,p:q);
+    beq=1;
+    %beq=Xj;
+    %H=obj_coef;
+    f=zeros(M,1);
+    %A=-Ai(:,p:q);
+    A=-eye(M);
+    b=zeros(M,1);
+    lb=pinv(Ai(:,p:q))*(Xj-5e-4);
+   % sumlb=sum(lb,1);
+   % lb=lb./(ones(M,1)*sumlb);
+   % lb=normcols(lb);
+    aaa=Xj+5e-4;
+    bbb=inv(Ai(:,p:q));
+    ub=pinv(Ai(:,p:q))*(Xj+5e-4);
+   % sumub=sum(ub,1);
+   % ub=ub./(ones(M,1)*sumub);
+   % ub=normcols(ub);
+    
+   
+    [y,fval,exitflag]=quadprog(-H,f,A,b,[],[],lb,ub,S(:,i),optimset('Display','off'));
+
+    obj(1,iter)=exitflag; 
+    obj(2,iter)=fval; 
+    if exitflag<0
+        beta=beta*10;
+        iter=iter-1;        
+    end
+    
+
+    if exitflag>=-2
+        S(:,i)=y';
+%         if abs(p)>abs(q) W(i,:)=y2';
+%         else W(i,:)=y1';
+%         end
+    end
+% % %     p=f'*W(i,:)'; 
+% % % %     if i==mm0 obj01(j00)=abs((v-max(abs(p),abs(q))))/v; j00=j00+1; v=max(abs(p),abs(q)); end
+% % %     obj01(j00)=v; j00=j00+1; v=p; 
+    y;
+  
+   iter=iter+1;
+   Sest=S;
+       
+     toc    
+end
+ 
+figure
+subplot(2,1,1)
+plot(obj(1,:))
+subplot(2,1,2)
+plot(obj(2,:))
+  % Si=S(:,i);  
+      
+  %      if min(min(Si)) < 0
+   %        Si(Si < 0) = 0;
+   %     end
+   %      if sum(Si) > 0
+   %      Si=Si./sum(Si);
+   %      end
+    %    Sest(:,i)=Si; 
+    %    At=S*S';
+    %   normcolA=sum(At,1);
+     %  At=At./(ones(M,1)*normcolA);
+    %    St(i)=na*det(At);
+        
+    %end       
+
+         
+         Sub=Subsum(Ai,S);
+      
+%for iter=1:100
+%      tic    
+%       for i=1:M
+            
+%           p=1+(i-1)*M;
+%        q=i*M;  
+            
+        %Ai(:,p:q)=(X*Sest(:,i)'-AS*S(:,i)')*pinv(Sest(:,i)*Sest(:,i)');
+        Ai(:,p:q)=Ai(:,p:q)-0.001*(X-Sub)*Sest(:,i)';
+        % if min(min(Ai)) < 0
+         %  Ai(Ai < 0) = 0;
+        % end
+       
+          
+%     normcol=sum(Ai,1);
+%     Ai=Ai./(ones(m,1)*normcol);
+         
+ %       end
+       
+   
+        
+        
+
+       Sst=reshape(S,a,1);
+        %Sst=Sst./sum(Sst);
+        %Sest=reshape(Sst,M,M);
+         %Sest0=Sest;
+         %if sum(Sest0) > 0
+         % normcol=sum(Sest0,1);
+         % Sest0=Sest0./(ones(M,1)*normcol);
+         %end
+      
+        Aest=Ai;  
+        Xest=Ai*Sst;
+       % Xest=Xest./(sum(Xest)) ;
+   
+   
+        S=Sest;
+        Err(iter)=sum(sum((Xest-X).^2));
+        Cost(iter)=sum(sum((Xest-X).^2))-abs(det(S'*S));
+        
+        ratio(iter)= dictdist1(Aest,Aa,0.1);
+    
+   
+   
+
+    
+end
+
+
+
+function A_P=adj_mat(A)
+[m n]=size(A);
+if m>n||m<n
+    fprintf('the matrix is not square\n');
+    return;
+end
+for i=1:m
+    ind1=[1:i-1 i+1:m];
+    for j=1:m
+        ind2=[1:j-1 j+1:m];
+        A_P(i,j,:,:)=A(ind1,ind2);
+
+    end
+end
+end
+
+ 
+
+

@@ -4,10 +4,10 @@ clear
 close all
 for b=1:1;
 % Set problem dimensions
-n=4; 
+n=5; 
 d=n^2;
 %d=n^2; % signal dimension
-r=9; % subspace dimension for each signal 
+r=15; % subspace dimension for each signal 
 N=2000; % number of training signals
 
 
@@ -28,22 +28,22 @@ N=2000; % number of training signals
 
 
 
-D1=rand(d,d);
+%D1=rand(d,d);
 
-D=[D1];
+%D=[D1];
 
-
+D=GenerateOmegaDIF(n);
 D=normcols(D);
 %D=D./max(max(D));
 
-Omega1=pinv(D1);
+Omega1=pinv(D);
 
 
 Omega=[Omega1];
 
 p=size(D,1); 
 
-[X1, H1] = gererateSyntheticDictionaryAndData(D1, N, r, 0);
+[X1, H1] = gererateSyntheticDictionaryAndData(D, N, r, 0);
 
 Omega=normrows(Omega);
 %D2=X1*pinv(H2);
@@ -118,6 +118,7 @@ DisplayOmega(Omeganew,h3);
 %title('Omega1');
 
 
+Xest=D2*S_est;    
 
 %show the sparse of H0
     S=abs(S_est)<1e-6;    %the number of zeros
@@ -151,14 +152,14 @@ plot(ratio*100,'-k');
 % figure;
 % plot(recoveryH,'-k');
 % title('recoveryH');
-
-% figure;   
-% plot(err,'-k');
+%     
+%  
+%  
 
 fname1=['resultserr1_smu1_' num2str(b) 'ratio.mat'];
 fname2=['resultserr2_smu1_' num2str(b) 'DET.mat'];
 save(fname1,'ratio');
 save(fname2,'DET');
-%%%%%%%%%
+
 end
 

@@ -1,0 +1,26 @@
+function [V V_norm Omega dictionary H H_norm] = MVC_NMF_for_W(V, W, H, eps, maxiter, param)
+[n N] = size(V);
+displayErrorWithTrueDictionary = 1;
+overflag = 0;
+ratio = zeros(param.numIteration,1);
+costtime = zeros(param.numIteration,1);
+ E=eye(50,50);
+tStart = tic;
+tic
+for iter=1:100
+    tic
+    W=W-0.0005*W-0.0005*W*V*V';
+    if min(min(W)) < 0
+        W(W < 0) = eps;
+    end
+    if rem(iter,50)==0
+        disp('done!')
+    end
+    toc
+    H=W*V;
+    sparsity_after=nnz(H)/numel(H);
+    sparsityW(iter)=sparsity_after;
+end
+    
+    
+    
