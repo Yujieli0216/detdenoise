@@ -365,9 +365,9 @@ if (hasIneqs || hasEqsAndBnds || hasMoreEqsThanVars || hasNoConstrs) && ...
    end
 
    if strcmpi(output.algorithm,trustRegReflect)
-    arg0 = 'Trust-region-reflective';
-    arg1 = 'active-set';
-    arg2 = addLink('Choosing the Algorithm','choose_algorithm');
+%    arg0 = 'Trust-region-reflective';
+%    arg1 = 'active-set';
+%    arg2 = addLink('Choosing the Algorithm','choose_algorithm');
    % warning(message('optim:quadprog:SwitchToMedScale',arg0, arg1, arg2));
     if AlgorithmUnsetByUser
         % Warn that will run a different algorithm (interior-point-convex) in a future release.

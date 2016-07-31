@@ -1,4 +1,4 @@
-function [A_est W S_est  ratio recoveryH DET]=IVM_QP(X0,r,Omega,H0)
+function [X  ratio DET]=IVM_QP(X0,r,Omega)
 % [1] Coleman, T.F. and Y. Li, "A Reflective Newton Method for Minimizing a Quadratic Function Subject to Bounds on some of the Variables," 
 % SIAM Journal on Optimization, Vol. 6, Number 4, pp. 1040-1058, 1996.
 
@@ -7,48 +7,25 @@ function [A_est W S_est  ratio recoveryH DET]=IVM_QP(X0,r,Omega,H0)
 % beta=max(max(X0));  %numerical processing 
 
 % while beta>=1
-[mm0 nn0]=size(X0);
-X1=X0(:,:);
-X1=diag(1./sum(X1,2))*X1;
+[mm0, nn0]=size(X0);
+X=rand(mm0,nn0);
 
-
-
-% % % beta0=max(max(X0));
-% % % X0=X0./beta0;
-
-if mm0<3
-    [A_est S_est obj]=nLCA_IVM2(X0);
-    return;
-else
-delt=0;
-X=X1;
-
-
-
-[m0 n0]=size(X1);
-XX=X1*X1';
+XX=X*X';
 m=mm0;
 
-rand('state',10);
-W1=rand(r,mm0);
-W2=randn(r,mm0);
+%rand('state',10);
 % w=diag(1./sum(w,2))*w;
-v=det(W1*W1');
-j00=1;
-k00=1;
+v=det(Omega)*det(Omega);
 iter1=1;
-iter2=1;
 XX0=XX;
 beta=1;
 DET1=zeros(3*r,1);
-DET2=zeros(3*r,1);
-DET3=zeros(3*r,1);
 DET=zeros(3*r,1);
 while iter1<3*r
 % for iter=1:1*r
     iter1;
     XX=beta*XX0;
-    WW=W1*XX*W1';
+    WW=XX;
     A_P=adj_mat(WW);
     i=mod(iter1,r);
     if i==0 i=r; end
@@ -67,12 +44,12 @@ while iter1<3*r
                 if t>=i 
                     tt=t+1; 
                 end
-                coef10=coef10+(-1)^(t+i-1)*det(temp2)*W1(tt,:)*XX;                
+                coef10=coef10+(-1)^(t+i-1)*det(temp2)*X(tt,:);                
             end
-            coef11=coef11+(-1)^(i+j)*XX*W1(j,:)'*coef10;
+            coef11=coef11+(-1)^(i+j)*X(j,:)'*coef10;
         end
         if j==i
-            coef21=XX*det(temp1);
+            coef21=det(temp1);
         end
         if j>i
             coef30=zeros(1,m);
@@ -82,9 +59,9 @@ while iter1<3*r
                 if t>=i 
                     tt=t+1;
                 end
-                coef30=coef30+(-1)^(t+i)*det(temp3)*W1(tt,:)*XX;                
+                coef30=coef30+(-1)^(t+i)*det(temp3)*X(tt,:);                
             end
-            coef31=coef31+(-1)^(i+j)*XX*W1(j,:)'*coef30;
+            coef31=coef31+(-1)^(i+j)*X(j,:)'*coef30;
         end
         obj_coef=coef11+coef21+coef31;
     end
@@ -93,10 +70,10 @@ while iter1<3*r
     beq=1;
     H=(obj_coef+obj_coef')/2;
     f=zeros(m,1);
-    A=-X1';
+    A=zeros(m,m);
     b=zeros(n0,1);
     
-    [y,fval,exitflag]=quadprog1(-H,f,A,b,Aeq,beq,[],[],W1(i,:)',optimset('Display','off'));
+    [y,fval,exitflag]=quadprog1(-H,f,A,b,Aeq,beq,[],[],X(i,:)',optimset('Display','off'));
 
     obj1(1,iter1)=exitflag; 
     obj1(2,iter1)=fval; 
@@ -107,28 +84,19 @@ while iter1<3*r
     
 
     if exitflag>-2
-        W1(i,:)=y';
+        X(i,:)=y';
     end
     y;
-    W1;
+    X;
      iter1=iter1+1;
-     A_est1=inv(W1);
-      S_est1=W1*X1;
+    
       if iter1~=0
         DET1(iter1)=-log(abs(det(S_est1*S_est1')));
       end    
 
 
-
- 
       
- W=[W1];
- A_est=[A_est1];
-
-  S_est=[S_est1];     
-      
-  [ratio(iter1)] = dictdist(W,Omega,0.01);
-  [recoveryH(iter1)]=dictdist(S_est',H0',0.01);
+  [ratio(iter1)] = dictdist(X,X0,0.01);
    DET(iter1)=DET1(iter1);
 end
  

@@ -1,4 +1,4 @@
-function [A_est W S_est  ratio recoveryH DET]=IVM_QP1(X0,r,Omega,H0)
+function [A_est W X  ratio recoveryH DET]=IVM_QP3(X0,r,Omega,H0)
 % [1] Coleman, T.F. and Y. Li, "A Reflective Newton Method for Minimizing a Quadratic Function Subject to Bounds on some of the Variables," 
 % SIAM Journal on Optimization, Vol. 6, Number 4, pp. 1040-1058, 1996.
 
@@ -48,7 +48,6 @@ m=mm0;
 
 rand('state',10);
 W1=rand(r,mm0);
-W2=randn(r,mm0);
 % w=diag(1./sum(w,2))*w;
 v=det(W1*W1');
 j00=1;
@@ -64,7 +63,7 @@ DET=zeros(3*r,1);
 while iter1<3*r
 % for iter=1:1*r
 
-    iter1;
+    iter1
    tic 
     XX=beta*XX0;
     WW=W1*XX*W1';
@@ -144,6 +143,7 @@ while iter1<3*r
  
       
  W=[W1];
+ W=normcols(W);
  A_est=[A_est1];
 
   S_est=[S_est1];     
@@ -160,6 +160,88 @@ while iter1<3*r
      end
 end
 
+
+
+
+%update X;
+
+W2=rand(r,nn0);
+
+  RR1=det(Omega)*det(Omega); 
+while iter2<3*r
+    iter2
+   tic 
+   
+    WW=W2*W2';
+    A_P=adj_mat(WW);
+    i=mod(iter2,r);
+    if i==0 i=r; end
+    coef11=zeros(nn0,nn0);
+    coef21=zeros(nn0,nn0);
+    coef31=zeros(nn0,nn0);
+    for j=1:r
+        temp1(:,:)=A_P(i,j,:,:);
+        A_P_temp1=adj_mat(temp1);
+
+        if j<i
+            coef10=zeros(1,nn0);
+            for t=1:r-1
+                 temp2(:,:)=A_P_temp1(t,i-1,:,:);
+                 tt=t;
+                if t>=i 
+                    tt=t+1; 
+                end
+                coef10=coef10+(-1)^(t+i-1)*det(temp2)*W2(tt,:);                
+            end
+            coef11=coef11+(-1)^(i+j)*W2(j,:)'*coef10;
+        end
+        if j==i
+            coef21=det(temp1);
+        end
+        if j>i
+            coef30=zeros(1,nn0);
+            for t=1:r-1
+                 temp3(:,:)=A_P_temp1(t,i,:,:);
+                 tt=t;
+                if t>=i 
+                    tt=t+1;
+                end
+                coef30=coef30+(-1)^(t+i)*det(temp3)*W2(tt,:);                
+            end
+            coef31=coef31+(-1)^(i+j)*W2(j,:)'*coef30;
+        end
+        obj_coef=coef11+coef21+coef31;
+    end
+
+    Aeq=ones(1,nn0);
+    beq=1;
+    H=(obj_coef+obj_coef')/2+RR1;
+    f=zeros(nn0,1);
+    A=-X1;
+    b=zeros(r,1);
+    
+    [y,fval,exitflag]=quadprog1(H,f,A,b,Aeq,beq,[],[],W2(i,:)',optimset('Display','off'));
+
+    obj2(1,iter2)=exitflag; 
+    obj2(2,iter2)=fval; 
+    if exitflag<0
+        beta=beta*5;
+        iter2=iter2-1;        
+    end
+    
+
+    if exitflag>-2
+        W2(i,:)=y';
+    end
+    
+     X=W2;
+X=normrows(X);
+    
+      iter2=iter2+1;
+    
+end
+
+ 
 
 
 

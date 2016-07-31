@@ -8,7 +8,7 @@ n=5;
 d=n^2;
 %d=n^2; % signal dimension
 r=4; % subspace dimension for each signal 
-N=2000; % number of training signals
+N=1000; % number of training signals
 
 
 % Generate analysis signals lying in r-dimensional nullspaces
@@ -57,6 +57,7 @@ DisplayOmega(Omega,h1);
  H0=[H1]; 
 
 X=[X1];
+Y=X+0.02*randn(d,N);
 
 %show the sparse of H0
     S=abs(H0)<1e-6;    %the number of zeros
@@ -101,7 +102,7 @@ X=[X1];
 
 
 
-[A_est Omeganew S_est ratio recoveryH DET]=IVM_QP1(X,d,Omega,H0);
+[A_est Omeganew X ratio recoveryH DET]=IVM_QP3(X,d,Omega,H0);
 S_est=normcols(S_est);
 
 
